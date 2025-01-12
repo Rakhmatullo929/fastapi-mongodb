@@ -6,25 +6,25 @@ from bson import ObjectId
 
 app = FastAPI()
 
-# Подключение к MongoDB
+"""Подключение к MongoDB"""
 client = AsyncIOMotorClient("mongodb://localhost:27017")
-db = client["my_database"]
+db = client["worklab"]
 
-# Коллекции
+"""Коллекции"""
 users_collection = db["users"]
 products_collection = db["products"]
 orders_collection = db["orders"]
 
-# MongoDB ObjectId -> str
 
 
+"""MongoDB ObjectId -> str"""
 def to_dict(data):
     data["_id"] = str(data["_id"])
     return data
 
-# Модели данных
 
 
+"""Модели данных"""
 class User(BaseModel):
     name: str
     email: str
@@ -48,9 +48,9 @@ class Order(BaseModel):
     status: str
     created_at: Optional[str] = None
 
-# ---- USERS ----
 
 
+"""Users"""
 @app.post("/users/", response_model=dict)
 async def create_user(user: User):
     user = user.dict()
@@ -68,7 +68,7 @@ async def get_users():
 async def get_user(user_id: str):
     user = await users_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(404, detail="User not found")
     return to_dict(user)
 
 
@@ -77,7 +77,7 @@ async def update_user(user_id: str, user: User):
     user = user.dict()
     result = await users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": user})
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(404, detail="User not found")
     return {"message": "User updated"}
 
 
@@ -85,12 +85,12 @@ async def update_user(user_id: str, user: User):
 async def delete_user(user_id: str):
     result = await users_collection.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(404, detail="User not found")
     return {"message": "User deleted"}
 
-# ---- PRODUCTS ----
 
 
+"""Products"""
 @app.post("/products/", response_model=dict)
 async def create_product(product: Product):
     product = product.dict()
@@ -109,12 +109,12 @@ async def update_product(product_id: str, product: Product):
     product = product.dict()
     result = await products_collection.update_one({"_id": ObjectId(product_id)}, {"$set": product})
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(404, detail="Product not found")
     return {"message": "Product updated"}
 
-# ---- ORDERS ----
 
 
+"""Orders"""
 @app.post("/orders/", response_model=dict)
 async def create_order(order: Order):
     order = order.dict()
@@ -132,5 +132,5 @@ async def get_orders():
 async def delete_order(order_id: str):
     result = await orders_collection.delete_one({"_id": ObjectId(order_id)})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(404, detail="Order not found")
     return {"message": "Order deleted"}
